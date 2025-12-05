@@ -1,0 +1,39 @@
+{
+  "name": "purohit-booking-backend",
+  "version": "1.0.0",
+  "description": "Node.js, TypeScript, Express, MySQL backend for Purohit Booking System.",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "generate": "prisma generate",
+    "predev": "npm run generate",
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate dev --name init",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "mysql",
+    "firebase"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^7.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.0",
+    "mysql2": "^3.9.7",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "prisma": "^7.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

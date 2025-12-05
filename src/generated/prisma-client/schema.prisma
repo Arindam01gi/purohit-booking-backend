@@ -1,0 +1,130 @@
+// Prisma Schema Definition for the Purohit Booking System
+// FIX: Removed 'url = env("DATABASE_URL")' to comply with Prisma 7+ validation.
+// The migration tool should still read DATABASE_URL from your .env file.
+
+datasource db {
+  provider = "mysql"
+  // url      = env("DATABASE_URL") <-- This line was removed
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // Output directory for generated files
+  output   = "../src/generated/prisma-client"
+}
+
+// Corresponds to the 'users' table in schema.sql
+model User {
+  id           Int      @id @default(autoincrement())
+  firebase_uid String   @unique(map: "firebase_uid") @db.VarChar(255)
+  email        String   @unique(map: "email") @db.VarChar(255)
+  name         String   @db.VarChar(255)
+  phone_number String?  @db.VarChar(20)
+  role         UserRole @default(user)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  // Relationships
+  purohitProfile Purohit?
+  bookings       Booking[]
+
+  @@map("users")
+}
+
+// Corresponds to the 'purohits' table in schema.sql
+model Purohit {
+  user_id     Int     @id @map("user_id")
+  bio         String? @db.Text
+  city        String  @db.VarChar(100)
+  rating      Decimal @default(0.0) @db.Decimal(2, 1)
+  is_verified Boolean @default(false)
+
+  // Relationships
+  user         User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  availability PurohitAvailability[]
+  bookings     Booking[]
+  servicesLink PurohitServiceLink[]
+
+  @@map("purohits")
+}
+
+// Corresponds to the 'services' table in schema.sql
+model Service {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique(map: "name") @db.VarChar(255)
+  description      String?  @db.Text
+  duration_minutes Int      @db.Int
+  price            Decimal  @db.Decimal(10, 2)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+
+  // Relationships
+  bookings     Booking[]
+  purohitsLink PurohitServiceLink[]
+
+  @@map("services")
+}
+
+// Corresponds to the 'bookings' table in schema.sql
+model Booking {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  purohit_id       Int
+  service_id       Int
+  start_time       DateTime      @db.DateTime(0)
+  end_time         DateTime      @db.DateTime(0)
+  location_address String        @db.VarChar(255)
+  total_price      Decimal       @db.Decimal(10, 2)
+  status           BookingStatus @default(pending)
+  created_at       DateTime      @default(now()) @db.Timestamp(0)
+
+  // Relationships
+  user    User    @relation(fields: [user_id], references: [id])
+  purohit Purohit @relation(fields: [purohit_id], references: [user_id])
+  service Service @relation(fields: [service_id], references: [id])
+
+  @@index([user_id], map: "user_id")
+  @@index([purohit_id], map: "purohit_id")
+  @@index([service_id], map: "service_id")
+  @@map("bookings")
+}
+
+// Corresponds to the 'purohit_availability' table in schema.sql
+model PurohitAvailability {
+  id           Int      @id @default(autoincrement())
+  purohit_id   Int
+  start_time   DateTime @db.DateTime(0)
+  end_time     DateTime @db.DateTime(0)
+  is_available Boolean  @default(true) // true = available, false = blocked time
+
+  // Relationships
+  purohit Purohit @relation(fields: [purohit_id], references: [user_id])
+
+  @@index([purohit_id], map: "purohit_id")
+  @@map("purohit_availability")
+}
+
+// Corresponds to the 'purohit_service_link' table in schema.sql
+model PurohitServiceLink {
+  purohit_id Int
+  service_id Int
+
+  // Relationships
+  purohit Purohit @relation(fields: [purohit_id], references: [user_id], onDelete: Cascade)
+  service Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@id([purohit_id, service_id]) // FIX: Removed map: "purohit_id"
+  @@map("purohit_service_link")
+}
+
+// Enums (mapping to MySQL ENUM types)
+enum UserRole {
+  user
+  purohit
+  admin
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+}
