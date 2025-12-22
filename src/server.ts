@@ -22,9 +22,6 @@ try {
     const serviceAccountContent = fs.readFileSync(keyPath, 'utf8');
     const serviceAccount = JSON.parse(serviceAccountContent);
 
-    // FIX: Module Resolution Workaround
-    // When using 'import * as admin', the actual functions may be nested under 'admin.default'
-    // in mixed ES/CommonJS environments. We use a dynamic check to ensure stability.
     const adminApi = (admin as any).default || admin;
 
     // Use adminApi.initializeApp and adminApi.credential.cert
